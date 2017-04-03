@@ -14,27 +14,27 @@ class PSO
     private $iteration;//Iterasyon katsayı
     ////////////////////////////////////
     private $swarm;
-    private $obj;
-    private $particlesBestValues;//obj-parçaçıkların en iyi değerleri swarmSize kadar array
+    private $optimumParticleValues;
+    private $particlesBestValues;//parçaçıkların en iyi değerleri swarmSize kadar array
     private $particlesBestPositions;//Parçacıkların bulundukları en iyi nokta-başlangıç için kendi değerleri swarm matrixi
     private $swarmBestValue;//En iyi grubun çözüm değeri
     private $swarmBestPosition;//En iyi grub kümesi
     private $particleVelocities;
     //////////////////////////////
-    private $objIT;
+    private $optimumParticleValuesList;
 
-    function __construct()
+    function __construct($swarmMember, $swarmSize, $w, $c1, $c2, $iteration)
     {
         $this->minValue = 1.01;
         $this->maxValue = 9.99;
-        $this->swarmMember = 5;
-        $this->swarmSize = 10;
-        $this->w = 0.6;
-        $this->c1 = 2;
-        $this->c2 = 2;
-        $this->iteration = 10;
+        $this->swarmMember = $swarmMember;
+        $this->swarmSize = $swarmSize;
+        $this->w = $w;
+        $this->c1 = $c1;
+        $this->c2 = $c2;
+        $this->iteration = $iteration;
         $this->swarm = array();
-        $this->obj = array();
+        $this->optimumParticleValues = array();
         $this->particlesBestValues = array();
         $this->particlesBestPositions = array();
         $this->swarmBestValue = null;
@@ -47,30 +47,23 @@ class PSO
         $this->swarm = $this->createSwarm($this->minValue, $this->maxValue, $this->swarmMember, $this->swarmSize);
         $this->particlesBestPositions = $this->swarm;
         $this->particleVelocities = $this->createParticleVelocities($this->swarmMember, $this->swarmSize);
-        $this->obj = $this->createObj($this->swarmSize);
-        //$this->echoHTML("KÜME", $this->swarm);
-        $this->obj = $this->findParticleBestValues($this->swarm);
-        $this->particlesBestValues = $this->obj;
-        //$this->echoHTML("KÜME EN İYİ SONUÇ", $this->particlesBestValues);
-        $this->findSwarmBestValue($this->obj);
-        //echo "<h3>EN İYİ Sonuç</h3><hr><p>Sonuç : " . $this->swarmBestValue . "</p>";
-        //$this->echoHTML("EN İYİ SÜRÜ", $this->swarmBestPosition);
-        ////////////////////////////////////////////////////////////////////
-        $this->objIT[0] = array($this->swarmBestValue);
+        $this->optimumParticleValues = $this->createObj($this->swarmSize);
+        $this->optimumParticleValues = $this->findParticleBestValues($this->swarm);
+        $this->particlesBestValues = $this->optimumParticleValues;
+        $this->findSwarmBestValue($this->optimumParticleValues);
+        $this->optimumParticleValuesList[0] = array($this->swarmBestValue);
         $iterationCount = 1;
         while ($iterationCount <= $this->iteration) {
             $this->particleVelocities = $this->updateParticalVelocities($this->particleVelocities, $this->particlesBestPositions
                 , $this->swarm, $this->swarmBestPosition);
-            //$this->echoHTML("HIZ BELİRLEME", $this->particleVelocities);
             $this->swarm = $this->moveParticals($this->swarm, $this->particleVelocities);
-            //$this->echoHTML("HAREKET", $this->swarm);
-            $this->obj = $this->findParticleBestValues($this->swarm);
-            $this->updateParticleBestValues($this->obj, $this->particlesBestValues);
-            $this->updateSwarmBestValues($this->obj);
-            $this->objIT[$iterationCount] = $this->swarmBestValue;
+            $this->optimumParticleValues = $this->findParticleBestValues($this->swarm);
+            $this->updateParticleBestValues($this->optimumParticleValues, $this->particlesBestValues);
+            $this->updateSwarmBestValues($this->optimumParticleValues);
+            $this->optimumParticleValuesList[$iterationCount] = $this->swarmBestValue;
             $iterationCount++;
         }
-        echo json_encode($this->objIT);
+        return json_encode($this->optimumParticleValuesList);
     }
 
     private function createSwarm($min, $max, $swarmMember, $swarmSize)
@@ -97,11 +90,11 @@ class PSO
 
     private function createObj($swarmSize)
     {
-        $obj = array();
+        $optimumParticleValues = array();
         for ($i = 0; $i < $swarmSize; $i++) {
-            $obj[$i] = 0;
+            $optimumParticleValues[$i] = 0;
         }
-        return $obj;
+        return $optimumParticleValues;
     }
 
     //////////////////////////////
@@ -125,17 +118,17 @@ class PSO
         return $particleBestValueArray;
     }
 
-    private function findSwarmBestValue($obj)
+    private function findSwarmBestValue($optimumParticleValues)
     {
         $tempSwarmBestValue = null;
         $tempSwarmBestPosition = null;
-        for ($i = 0; $i < count($obj); $i++) {
+        for ($i = 0; $i < count($optimumParticleValues); $i++) {
             if (is_null($tempSwarmBestValue)) {
-                $tempSwarmBestValue = $obj[$i];
+                $tempSwarmBestValue = $optimumParticleValues[$i];
                 $tempSwarmBestPosition = $i;
             } else {
-                if ($obj[$i] > $tempSwarmBestValue) {
-                    $tempSwarmBestValue = $obj[$i];
+                if ($optimumParticleValues[$i] > $tempSwarmBestValue) {
+                    $tempSwarmBestValue = $optimumParticleValues[$i];
                     $tempSwarmBestPosition = $i;
                 }
             }
@@ -198,11 +191,11 @@ class PSO
         return $swarm;
     }
 
-    private function updateParticleBestValues($obj, $particalBestValues)
+    private function updateParticleBestValues($optimumParticleValues, $particalBestValues)
     {
-        for ($i = 0; $i < count($obj); $i++) {
-            if ($obj[$i] > $particalBestValues[$i]) {
-                $this->particlesBestValues[$i] = $obj[$i];
+        for ($i = 0; $i < count($optimumParticleValues); $i++) {
+            if ($optimumParticleValues[$i] > $particalBestValues[$i]) {
+                $this->particlesBestValues[$i] = $optimumParticleValues[$i];
                 for ($j = 0; $j < count($this->swarm[$i]); $j++) {
                     $this->particlesBestPositions[$i][$j] = $this->swarm[$i][$j];
                 }
@@ -210,17 +203,17 @@ class PSO
         }
     }
 
-    private function updateSwarmBestValues($obj)
+    private function updateSwarmBestValues($optimumParticleValues)
     {
         $tempSwarmBestValue = null;
         $tempSwarmBestPosition = null;
-        for ($i = 0; $i < count($obj); $i++) {
+        for ($i = 0; $i < count($optimumParticleValues); $i++) {
             if (is_null($tempSwarmBestValue)) {
-                $tempSwarmBestValue = $obj[$i];
+                $tempSwarmBestValue = $optimumParticleValues[$i];
                 $tempSwarmBestPosition = $i;
             } else {
-                if ($obj[$i] > $tempSwarmBestValue) {
-                    $tempSwarmBestValue = $obj[$i];
+                if ($optimumParticleValues[$i] > $tempSwarmBestValue) {
+                    $tempSwarmBestValue = $optimumParticleValues[$i];
                     $tempSwarmBestPosition = $i;
                 }
             }
