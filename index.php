@@ -116,18 +116,20 @@
 
         $(function () {
 
-            var data = <?php
+            var data =
+            <?php
                 require_once "PSO.php";
                 $swarmMember = 7;//Küme eleman sayısı
                 $swarmSize = 15;//Oluşturulacak küme sayısı
                 $w = 0.6;///eylemsizlik katsayısı
                 $c1 = 2;//Bilişsel katsayı
                 $c2 = 2;//Sosyal katsayı
-                $iteration = 1000;//Iterasyon katsayı
+                $iteration = 100;//Iterasyon katsayı
                 $pso = new PSO($swarmMember, $swarmSize, $w, $c1, $c2, $iteration);
-                echo $pso->calculate();?>;
+                echo $pso->calculate();
+                ?>
 
-            console.log(data);
+                console.log(data);
             var dataFixed = [];
             for (var i = 0; i < data.length; i++) {
                 dataFixed.push([i, data[i]])

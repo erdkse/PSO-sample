@@ -47,7 +47,7 @@ class PSO
         $this->swarm = $this->createSwarm($this->minValue, $this->maxValue, $this->swarmMember, $this->swarmSize);
         $this->particlesBestPositions = $this->swarm;
         $this->particleVelocities = $this->createParticleVelocities($this->swarmMember, $this->swarmSize);
-        $this->optimumParticleValues = $this->createObj($this->swarmSize);
+        $this->optimumParticleValues = $this->createOptimumParticleValues($this->swarmSize);
         $this->optimumParticleValues = $this->findParticleBestValues($this->swarm);
         $this->particlesBestValues = $this->optimumParticleValues;
         $this->findSwarmBestValue($this->optimumParticleValues);
@@ -88,7 +88,7 @@ class PSO
         return $particleVelocities;
     }
 
-    private function createObj($swarmSize)
+    private function createOptimumParticleValues($swarmSize)
     {
         $optimumParticleValues = array();
         for ($i = 0; $i < $swarmSize; $i++) {
